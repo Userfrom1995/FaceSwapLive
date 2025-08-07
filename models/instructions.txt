@@ -1,0 +1,32 @@
+# Face Swap Live - Model Setup Instructions
+
+## Required Models
+Download the models below and place them in this folder (models/).
+
+### Face Swapper Models (Choose ONE):
+
+🏆 **BEST QUALITY** (Recommended for 6GB+ VRAM):
+https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/inswapper_128.onnx
+
+⚡ **FAST & EFFICIENT** (Recommended for 4GB or less VRAM):
+https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/inswapper_128_fp16.onnx
+
+### Face Enhancement Model (Optional but recommended):
+
+🎨 **FACE ENHANCEMENT**:
+https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/GFPGANv1.4.pth
+
+## Auto-Download
+If you don't download any models manually, the application will automatically download:
+- inswapper_128.onnx (best quality)
+- GFPGANv1.4.pth (face enhancement)
+
+## Model Priority
+The application uses this priority order:
+1. inswapper_128.onnx (full precision - best quality)
+2. inswapper_128_fp16.onnx (half precision - faster, less VRAM)
+
+## Hardware Recommendations
+- **High-end GPU (RTX 3070+, 8GB+ VRAM)**: Use inswapper_128.onnx
+- **Mid-range GPU (GTX 1660, RTX 3060, 4-6GB VRAM)**: Use inswapper_128_fp16.onnx
+- **Low-end GPU (4GB or less VRAM)**: Use inswapper_128_fp16.onnx

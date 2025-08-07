@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Swap Live - Server Busy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .busy-container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 60px 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 500px;
+        }
+
+        .busy-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .busy-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .busy-message {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .busy-details {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .busy-details h4 {
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .busy-details ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .busy-details li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .busy-details li:before {
+            content: "•";
+            color: #ffd700;
+            position: absolute;
+            left: 0;
+        }
+
+        .retry-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .countdown {
+            font-size: 1.1em;
+            margin-top: 20px;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="busy-container">
+        <div class="busy-icon">⏳</div>
+        <h1 class="busy-title">Server Busy</h1>
+        <p class="busy-message">
+            The Face Swap Live server is currently serving another user. 
+            This application is optimized for single-user access to provide maximum performance.
+        </p>
+
+        <div class="busy-details">
+            <h4>Why Single User?</h4>
+            <ul>
+                <li>Maximum GPU utilization for real-time processing</li>
+                <li>Optimal frame rate and quality</li>
+                <li>Dedicated system resources</li>
+                <li>Consistent performance guarantee</li>
+            </ul>
+        </div>
+
+        <button class="retry-btn" onclick="window.location.reload()">
+            🔄 Try Again
+        </button>
+
+        <div class="countdown" id="countdown">
+            Auto-refresh in <span id="timer">30</span> seconds
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh countdown
+        let timeLeft = 30;
+        const timerElement = document.getElementById('timer');
+        
+        const countdown = setInterval(() => {
+            timeLeft--;
+            timerElement.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                window.location.reload();
+            }
+        }, 1000);
+
+        // Check server availability periodically
+        const checkAvailability = setInterval(async () => {
+            try {
+                const response = await fetch('/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'healthy') {
+                        // Server might be available, try to reload
+                        window.location.href = '/';
+                    }
+                }
+            } catch (error) {
+                // Server still busy or unavailable
+                console.log('Server still busy');
+            }
+        }, 5000); // Check every 5 seconds
+
+        // Cleanup intervals when page unloads
+        window.addEventListener('beforeunload', () => {
+            clearInterval(countdown);
+            clearInterval(checkAvailability);
+        });
+    </script>
+</body>
+</html>

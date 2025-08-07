@@ -1,0 +1,33 @@
+# Face Swap Live - Python Dependencies
+# Core web framework and real-time communication
+Flask
+Flask-SocketIO
+python-socketio
+python-engineio
+
+# Computer vision and image processing
+opencv-python
+Pillow
+numpy
+
+# AI/ML frameworks for face processing
+torch
+torchvision
+insightface
+onnxruntime-gpu
+
+# ONNX model support
+onnx
+
+
+# Utility libraries
+psutil
+gdown
+tqdm
+pyngrok
+
+
+# Development and debugging (optional)
+# Uncomment for development
+# flask-cors==4.0.0
+# python-dotenv==1.0.0

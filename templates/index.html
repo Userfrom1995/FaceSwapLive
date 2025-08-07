@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Real-time Face Swap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .control-panel {
+            flex: 1;
+            min-width: 350px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .video-area {
+            flex: 2;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .video-large {
+            grid-column: span 2;
+            height: 450px;
+        }
+
+        .video-small {
+            height: 200px;
+        }
+
+        .video-element {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .video-label {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ff4444;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .status-indicator.active {
+            background: #44ff44;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .upload-section {
+            margin: 25px 0;
+            padding: 25px;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .upload-section h4 {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .file-input {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: white;
+            width: 100%;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+
+        .status-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .status-box.error {
+            border-left-color: #f44336;
+        }
+
+        .status-box h4 {
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .logs-container {
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 3px;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .video-large {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Real-time Face Swap</h1>
+            <p>Production-Ready • GPU-Accelerated • Real-time Processing</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h3>🎮 Control Center</h3>
+
+                <!-- Upload Section -->
+                <div class="upload-section">
+                    <h4>📸 Upload Source Face</h4>
+                    <input type="file" id="sourceFile" accept="image/*" class="file-input">
+                    <button onclick="uploadSource()" class="btn">🚀 Upload & Start</button>
+                </div>
+
+                <!-- Status Display -->
+                <div class="status-box" id="statusBox">
+                    <h4>📊 System Status</h4>
+                    <div id="status">🔄 Ready! Upload a face image to start real-time swapping</div>
+                </div>
+
+                <!-- Control Buttons -->
+                <div style="text-align: center; margin: 20px 0;">
+                    <button onclick="clearSource()" class="btn btn-danger">🗑️ Clear Source</button>
+                    <button onclick="toggleProcessing()" class="btn btn-secondary" id="toggleBtn">⏸️ Pause</button>
+                </div>
+
+                <!-- Statistics -->
+                <div class="status-box">
+                    <h4>📈 Performance Stats</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number" id="frameCount">0</span>
+                            <span class="stat-label">Frames</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="swapCount">0</span>
+                            <span class="stat-label">Swaps</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="errorCount">0</span>
+                            <span class="stat-label">Errors</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Logs -->
+                <div class="status-box">
+                    <h4>📝 Live Processing Logs</h4>
+                    <div class="logs-container" id="logs"></div>
+                </div>
+            </div>
+
+            <!-- Video Area -->
+            <div class="video-area">
+                <h3>📹 Live Video Feed</h3>
+
+                <div class="video-grid">
+                    <!-- Main Output -->
+                    <div class="video-container video-large">
+                        <div class="video-label">🎯 Face Swapped Output</div>
+                        <div class="status-indicator" id="outputIndicator"></div>
+                        <canvas id="outputCanvas" class="video-element"></canvas>
+                    </div>
+
+                    <!-- Original Webcam -->
+                    <div class="video-container video-small">
+                        <div class="video-label">📹 Original Webcam</div>
+                        <div class="status-indicator active" id="webcamIndicator"></div>
+                        <video id="webcam" class="video-element" autoplay muted playsinline></video>
+                    </div>
+
+                    <!-- Source Preview -->
+                    <div class="video-container video-small">
+                        <div class="video-label">📸 Source Face</div>
+                        <div class="status-indicator" id="sourceIndicator"></div>
+                        <canvas id="sourceCanvas" class="video-element"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+    <script>
+        // Initialize Socket.IO connection
+        const socket = io();
+
+        // DOM elements
+        const webcam = document.getElementById('webcam');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const sourceCanvas = document.getElementById('sourceCanvas');
+        const captureCanvas = document.createElement('canvas');
+
+        // Canvas contexts
+        const outputCtx = outputCanvas.getContext('2d');
+        const sourceCtx = sourceCanvas.getContext('2d');
+        const captureCtx = captureCanvas.getContext('2d');
+
+        // State variables
+        let processingActive = true;
+        let isProcessing = false;
+        let frameCount = 0;
+        let swapCount = 0;
+        let errorCount = 0;
+
+        // Logging function
+        function addLog(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logs.appendChild(logEntry);
+            logs.scrollTop = logs.scrollHeight;
+
+            // Keep only last 50 log entries
+            while (logs.children.length > 50) {
+                logs.removeChild(logs.firstChild);
+            }
+        }
+
+        // Initialize webcam
+        async function initializeWebcam() {
+            try {
+                addLog('🔄 Requesting webcam access...');
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 30 }
+                    }
+                });
+
+                webcam.srcObject = stream;
+                addLog('✅ Webcam initialized successfully');
+
+                webcam.onloadedmetadata = () => {
+                    addLog(`📹 Video ready: ${webcam.videoWidth}x${webcam.videoHeight}`);
+                    startProcessingLoop();
+                };
+
+            } catch (error) {
+                addLog(`❌ Webcam error: ${error.message}`);
+                updateStatus('❌ Camera access denied. Please allow camera access and refresh.', 'error');
+            }
+        }
+
+        // Start processing loop
+        function startProcessingLoop() {
+            addLog('🚀 Starting real-time processing loop...');
+
+            setInterval(() => {
+                if (!processingActive || isProcessing) return;
+
+                frameCount++;
+                isProcessing = true;
+
+                // Capture frame from webcam
+                captureCanvas.width = webcam.videoWidth || 640;
+                captureCanvas.height = webcam.videoHeight || 480;
+                captureCtx.drawImage(webcam, 0, 0);
+
+                // Convert to base64
+                const frameData = captureCanvas.toDataURL('image/jpeg', 0.85);
+
+                if (frameCount % 10 === 0) {  // Log every 10th frame
+                    addLog(`📸 Sending frame #${frameCount} to server...`);
+                }
+
+                // Send to server for processing
+                socket.emit('process_frame', { frame: frameData });
+
+                // Update frame counter
+                document.getElementById('frameCount').textContent = frameCount;
+
+            }, 100); // 10 FPS processing
+        }
+
+        // Handle processed frame response
+        socket.on('processed_frame', (data) => {
+            if (data.success) {
+                // Display processed frame
+                const img = new Image();
+                img.onload = () => {
+                    outputCanvas.width = img.width;
+                    outputCanvas.height = img.height;
+                    outputCtx.drawImage(img, 0, 0);
+
+                    swapCount++;
+                    document.getElementById('outputIndicator').classList.add('active');
+
+                    if (swapCount % 5 === 0) {  // Log every 5th swap
+                        addLog(`✅ Face swap #${swapCount} completed successfully!`);
+                    }
+                };
+                img.src = data.processed;
+            } else {
+                errorCount++;
+                document.getElementById('outputIndicator').classList.remove('active');
+
+                if (errorCount % 5 === 0) {  // Log every 5th error
+                    addLog(`❌ Processing failed. Error #${errorCount}`);
+                }
+            }
+
+            // Update statistics
+            document.getElementById('swapCount').textContent = swapCount;
+            document.getElementById('errorCount').textContent = errorCount;
+
+            isProcessing = false;
+        });
+
+        // Upload source face
+        async function uploadSource() {
+            const fileInput = document.getElementById('sourceFile');
+
+            if (!fileInput.files[0]) {
+                addLog('❌ No file selected');
+                alert('Please select an image first');
+                return;
+            }
+
+            addLog(`📤 Uploading: ${fileInput.files[0].name}`);
+            updateStatus('🔄 Processing uploaded image...', 'info');
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/upload_source', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                updateStatus(result.message, result.success ? 'success' : 'error');
+                addLog(`📨 Upload result: ${result.message}`);
+
+                if (result.success) {
+                    // Show source image preview
+                    const img = new Image();
+                    img.onload = () => {
+                        sourceCanvas.width = img.width;
+                        sourceCanvas.height = img.height;
+                        sourceCtx.drawImage(img, 0, 0);
+                        document.getElementById('sourceIndicator').classList.add('active');
+                    };
+                    img.src = URL.createObjectURL(fileInput.files[0]);
+                } else {
+                    document.getElementById('sourceIndicator').classList.remove('active');
+                }
+
+            } catch (error) {
+                addLog(`❌ Upload failed: ${error.message}`);
+                updateStatus('❌ Upload failed', 'error');
+            }
+        }
+
+        // Clear source face
+        function clearSource() {
+            socket.emit('clear_source');
+            document.getElementById('sourceIndicator').classList.remove('active');
+            document.getElementById('outputIndicator').classList.remove('active');
+            sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+            outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+            updateStatus('🔄 Source face cleared', 'info');
+            addLog('🗑️ Source face cleared by user');
+        }
+
+        // Toggle processing
+        function toggleProcessing() {
+            processingActive = !processingActive;
+            const btn = document.getElementById('toggleBtn');
+            btn.textContent = processingActive ? '⏸️ Pause' : '▶️ Resume';
+            addLog(`🎮 Processing ${processingActive ? 'resumed' : 'paused'}`);
+        }
+
+        // Update status display
+        function updateStatus(message, type = 'info') {
+            const statusBox = document.getElementById('statusBox');
+            const statusDiv = document.getElementById('status');
+
+            statusDiv.textContent = message;
+            statusBox.className = `status-box ${type === 'error' ? 'error' : ''}`;
+        }
+
+        // Socket event handlers
+        socket.on('connect', () => {
+            addLog('🔌 Connected to server');
+            updateStatus('🔌 Connected to real-time face swap server', 'success');
+        });
+
+        socket.on('disconnect', () => {
+            addLog('🔌 Disconnected from server');
+            updateStatus('🔌 Disconnected from server', 'error');
+        });
+
+        socket.on('status_update', (data) => {
+            addLog(`📊 ${data.message}`);
+        });
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('🚀 Real-time Face Swap application starting...');
+            initializeWebcam();
+        });
+    </script>
+</body>
+</html>
