@@ -73,26 +73,33 @@ class FaceSwapPipeline:
             self.face_app.prepare(ctx_id=0 if torch.cuda.is_available() else -1, det_size=(320, 320))
             # log_with_timestamp("✅ Face analysis model ready")
             
-            # Load face swapper models - try in priority order
-            for face_swapper_path in get_best_models():
-                if os.path.exists(face_swapper_path):
-                    try:
-                        # log_with_timestamp(f"🔄 Loading: {face_swapper_path}")
-                        self.face_swapper = insightface.model_zoo.get_model(face_swapper_path, providers=providers)
-                        # log_with_timestamp(f"✅ Face swapper loaded: {os.path.basename(face_swapper_path)}")
-                        
-                        # Model warmup - silent
-                        dummy_img = np.random.randint(0, 255, (320, 320, 3), dtype=np.uint8)
-                        self.face_app.get(dummy_img)
-                        # log_with_timestamp("🔥 Model warmup completed")
-                        return True
-                        
-                    except Exception as e:
-                        log_error(f"Failed to load {face_swapper_path}: {e}")
-                        continue
+            # Ensure models are available (download if necessary)
+            from models import ensure_models_available
+            if not ensure_models_available():
+                log_error("CRITICAL: Failed to ensure models are available!")
+                return False
             
-            log_error("CRITICAL: No face swapper model could be loaded!")
-            return False
+            # Get the best available face swapper model
+            face_swapper_path, _ = get_best_models()
+            
+            if face_swapper_path and os.path.exists(face_swapper_path):
+                try:
+                    # log_with_timestamp(f"🔄 Loading: {face_swapper_path}")
+                    self.face_swapper = insightface.model_zoo.get_model(face_swapper_path, providers=providers)
+                    # log_with_timestamp(f"✅ Face swapper loaded: {os.path.basename(face_swapper_path)}")
+                    
+                    # Model warmup - silent
+                    dummy_img = np.random.randint(0, 255, (320, 320, 3), dtype=np.uint8)
+                    self.face_app.get(dummy_img)
+                    # log_with_timestamp("🔥 Model warmup completed")
+                    return True
+                    
+                except Exception as e:
+                    log_error(f"Failed to load {face_swapper_path}: {e}")
+                    return False
+            else:
+                log_error("CRITICAL: No face swapper model could be loaded!")
+                return False
             
         except Exception as e:
             log_error(f"Model initialization error: {e}")

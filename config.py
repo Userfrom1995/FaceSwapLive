@@ -73,9 +73,8 @@ class ModelConfig:
     
     # Face swapper models (in priority order)
     FACE_SWAPPER_MODELS = [
-        "inswapper_128.onnx",           # High quality model
-        "inswapper_128_enhanced.onnx",  # Enhanced model if available
-        "inswapper_128_fp16.onnx"       # Optimized FP16 model
+        "inswapper_128.onnx",           # High quality model (best quality)
+        "inswapper_128_fp16.onnx"       # Optimized FP16 model (faster, less VRAM)
     ]
     
     # Face enhancement models
@@ -90,9 +89,9 @@ class ModelConfig:
         "GFPGANv1.4.pth": "https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/GFPGANv1.4.pth"
     }
     
-    # Google Drive IDs for alternative downloads
-    GDRIVE_IDS = {
-        "inswapper_128_enhanced.onnx": "1krOLgjW2tAPaqV-Bw4YALz0xT5zlb5HF"
+    # Alternative download sources (if needed)
+    ALTERNATIVE_URLS = {
+        # Add alternative sources here if main URLs fail
     }
     
     # GPU settings
@@ -167,6 +166,7 @@ class NgrokConfig:
     AUTH_TOKEN = None        # Ngrok auth token (set via environment or command line)
     SUBDOMAIN = None         # Custom subdomain (requires paid plan)
     REGION = "us"           # Ngrok region: us, eu, ap, au, sa, jp, in
+    DASHBOARD_PORT = 4040    # Ngrok dashboard port (default: 4040)
     
     # Security settings
     SHOW_TUNNEL_WARNING = True  # Show security warning when tunnel is active
@@ -241,6 +241,12 @@ def load_environment_overrides():
     
     if os.getenv('NGROK_REGION'):
         config.ngrok.REGION = os.getenv('NGROK_REGION')
+    
+    if os.getenv('NGROK_DASHBOARD_PORT'):
+        try:
+            config.ngrok.DASHBOARD_PORT = int(os.getenv('NGROK_DASHBOARD_PORT'))
+        except ValueError:
+            pass
 
 # Load environment overrides on import
 load_environment_overrides()

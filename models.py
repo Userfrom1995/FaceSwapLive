@@ -17,6 +17,12 @@ def log_with_timestamp(message):
     timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
     print(f"[{timestamp}] {message}")
 
+def debug_log(message):
+    """Debug logging for troubleshooting"""
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+    print(f"[{timestamp}] DEBUG: {message}")
+
 def ensure_models_directory():
     """Ensure models directory exists"""
     models_dir = Path(config.models.MODELS_DIR)
@@ -106,6 +112,10 @@ def ensure_models_available() -> bool:
     has_gfpgan = (models_dir / "GFPGANv1.4.pth").exists()
     
     log_with_timestamp("🔍 Checking model availability...")
+    debug_log(f"Models directory: {models_dir}")
+    debug_log(f"Has inswapper_128.onnx: {has_full_precision}")
+    debug_log(f"Has inswapper_128_fp16.onnx: {has_fp16}")
+    debug_log(f"Has GFPGANv1.4.pth: {has_gfpgan}")
     
     # Scenario 1: User has best model (full precision)
     if has_full_precision:

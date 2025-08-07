@@ -234,6 +234,11 @@ def create_server():
     _server_instance = OptimizedFaceSwapServer()
     return _server_instance
 
+def get_available_port():
+    """Get an available port using the server's logic"""
+    temp_server = OptimizedFaceSwapServer()
+    return temp_server.find_available_port()
+
 def start_server(host='0.0.0.0', port=None):
     """Start the optimized server"""
     server = create_server()
