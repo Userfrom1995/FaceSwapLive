@@ -305,7 +305,7 @@ def main():
             from ngrok_manager import NgrokManager
             ngrok_manager = NgrokManager(dashboard_port=config.ngrok.DASHBOARD_PORT)
             
-            logger.info(f"🚀 Starting ngrok tunnel for port {server_port}...")
+            logger.info(f"Starting ngrok tunnel for port {server_port}...")
             
             # Start tunnel with the determined port
             tunnel_url = ngrok_manager.start_tunnel(
@@ -320,10 +320,10 @@ def main():
                 if ngrok_manager.verify_tunnel(server_port):
                     tunnel_details = ngrok_manager.get_tunnel_details()
                     ngrok_manager.print_tunnel_info()
-                    logger.info(f"✅ Ngrok tunnel verified - Server will start on port {server_port}")
-                    logger.info(f"🔗 Tunnel: {tunnel_details.get('public_url')} -> {tunnel_details.get('local_addr', f'localhost:{server_port}')}")
+                    logger.info(f"Ngrok tunnel verified - Server will start on port {server_port}")
+                    logger.info(f"Tunnel: {tunnel_details.get('public_url')} -> {tunnel_details.get('local_addr', f'localhost:{server_port}')}")
                 else:
-                    logger.warning("⚠️  Tunnel verification failed, but continuing anyway")
+                    logger.warning("Tunnel verification failed, but continuing anyway")
                     ngrok_manager.print_tunnel_info()
                 
                 # Open browser if configured
@@ -331,12 +331,12 @@ def main():
                     try:
                         import webbrowser
                         webbrowser.open(tunnel_url)
-                        logger.info("🌐 Opened tunnel URL in browser")
+                        logger.info("Opened tunnel URL in browser")
                     except Exception as e:
                         logger.warning(f"Could not open browser: {e}")
             else:
-                logger.warning("⚠️  Ngrok tunnel failed to start, continuing with local server only")
-                logger.info(f"🌐 Server will be available locally at: http://localhost:{server_port}")
+                logger.warning("Ngrok tunnel failed to start, continuing with local server only")
+                logger.info(f"Server will be available locally at: http://localhost:{server_port}")
         
         # Start the actual server with the determined port
         success = start_server(host=args.host, port=server_port)

@@ -32,7 +32,7 @@ def ensure_models_directory():
 def download_model(url: str, filepath: Path) -> bool:
     """Download a model file from URL"""
     try:
-        log_with_timestamp(f"📥 Downloading model: {filepath.name}")
+        log_with_timestamp(f"Downloading model: {filepath.name}")
         response = requests.get(url, stream=True)
         response.raise_for_status()
         
@@ -46,14 +46,14 @@ def download_model(url: str, filepath: Path) -> bool:
                     downloaded += len(chunk)
                     if total_size > 0:
                         progress = (downloaded / total_size) * 100
-                        print(f"\r📥 Progress: {progress:.1f}%", end='', flush=True)
+                        print(f"\rProgress: {progress:.1f}%", end='', flush=True)
         
         print()  # New line after progress
-        log_with_timestamp(f"✅ Model downloaded successfully: {filepath.name}")
+        log_with_timestamp(f"Model downloaded successfully: {filepath.name}")
         return True
         
     except Exception as e:
-        log_with_timestamp(f"❌ Failed to download {filepath.name}: {e}")
+        log_with_timestamp(f"Failed to download {filepath.name}: {e}")
         if filepath.exists():
             filepath.unlink()  # Remove partial download
         return False
@@ -77,7 +77,7 @@ def get_best_models() -> Tuple[Optional[str], Optional[str]]:
         model_path = models_dir / model_name
         if model_path.exists() and model_path.stat().st_size > 1000000:  # At least 1MB
             face_swapper_path = str(model_path)
-            log_with_timestamp(f"✅ Found face swapper: {model_name}")
+            log_with_timestamp(f"Found face swapper: {model_name}")
             break
     
     # Face analysis model (buffalo_l is downloaded automatically by insightface)
@@ -111,7 +111,7 @@ def ensure_models_available() -> bool:
     has_fp16 = (models_dir / "inswapper_128_fp16.onnx").exists()
     has_gfpgan = (models_dir / "GFPGANv1.4.pth").exists()
     
-    log_with_timestamp("🔍 Checking model availability...")
+    log_with_timestamp("Checking model availability...")
     debug_log(f"Models directory: {models_dir}")
     debug_log(f"Has inswapper_128.onnx: {has_full_precision}")
     debug_log(f"Has inswapper_128_fp16.onnx: {has_fp16}")
@@ -119,41 +119,41 @@ def ensure_models_available() -> bool:
     
     # Scenario 1: User has best model (full precision)
     if has_full_precision:
-        log_with_timestamp("✅ Found inswapper_128.onnx (best quality)")
+        log_with_timestamp("Found inswapper_128.onnx (best quality)")
         if not has_gfpgan:
-            log_with_timestamp("📥 Downloading GFPGAN for face enhancement...")
+            log_with_timestamp("Downloading GFPGAN for face enhancement...")
             if not download_model(MODEL_URLS["GFPGANv1.4.pth"], models_dir / "GFPGANv1.4.pth"):
-                log_with_timestamp("⚠️  GFPGAN download failed, continuing without enhancement")
+                log_with_timestamp("GFPGAN download failed, continuing without enhancement")
         return True
     
     # Scenario 2: User has FP16 model only
     elif has_fp16:
-        log_with_timestamp("✅ Found inswapper_128_fp16.onnx (fast, lower VRAM)")
+        log_with_timestamp("Found inswapper_128_fp16.onnx (fast, lower VRAM)")
         if not has_gfpgan:
-            log_with_timestamp("📥 Downloading GFPGAN for face enhancement...")
+            log_with_timestamp("Downloading GFPGAN for face enhancement...")
             if not download_model(MODEL_URLS["GFPGANv1.4.pth"], models_dir / "GFPGANv1.4.pth"):
-                log_with_timestamp("⚠️  GFPGAN download failed, continuing without enhancement")
+                log_with_timestamp("GFPGAN download failed, continuing without enhancement")
         return True
     
     # Scenario 3: User has no face swapper models
     else:
-        log_with_timestamp("❌ No face swapper models found")
-        log_with_timestamp("📥 Downloading inswapper_128.onnx (best quality)...")
+        log_with_timestamp("No face swapper models found")
+        log_with_timestamp("Downloading inswapper_128.onnx (best quality)...")
         
         # Download the best model first
         if download_model(MODEL_URLS["inswapper_128.onnx"], models_dir / "inswapper_128.onnx"):
-            log_with_timestamp("✅ Face swapper model downloaded successfully")
+            log_with_timestamp("Face swapper model downloaded successfully")
             
             # Also download GFPGAN
             if not has_gfpgan:
-                log_with_timestamp("📥 Downloading GFPGAN for face enhancement...")
+                log_with_timestamp("Downloading GFPGAN for face enhancement...")
                 if not download_model(MODEL_URLS["GFPGANv1.4.pth"], models_dir / "GFPGANv1.4.pth"):
-                    log_with_timestamp("⚠️  GFPGAN download failed, continuing without enhancement")
+                    log_with_timestamp("GFPGAN download failed, continuing without enhancement")
             
             return True
         else:
-            log_with_timestamp("❌ Failed to download required models")
-            log_with_timestamp("💡 Please manually download models from:")
+            log_with_timestamp("Failed to download required models")
+            log_with_timestamp("Please manually download models from:")
             for name, url in MODEL_URLS.items():
                 log_with_timestamp(f"   {name}: {url}")
             return False
@@ -169,7 +169,7 @@ def list_available_models():
     
     if not face_swapper_files and not other_files:
         log_with_timestamp("   No models found")
-        log_with_timestamp("💡 Download models from: https://github.com/Userfrom1995/FaceSwapLive/releases/tag/v1.0.0")
+        log_with_timestamp("Download models from: https://github.com/Userfrom1995/FaceSwapLive/releases/tag/v1.0.0")
         return
     
     # List face swapper models with recommendations
@@ -178,11 +178,11 @@ def list_available_models():
         for model_file in sorted(face_swapper_files):
             size_mb = model_file.stat().st_size / (1024 * 1024)
             if model_file.name == "inswapper_128.onnx":
-                log_with_timestamp(f"   ✅ {model_file.name} ({size_mb:.1f} MB) - BEST QUALITY")
+                log_with_timestamp(f"   {model_file.name} ({size_mb:.1f} MB) - BEST QUALITY")
             elif model_file.name == "inswapper_128_fp16.onnx":
-                log_with_timestamp(f"   ⚡ {model_file.name} ({size_mb:.1f} MB) - FAST, LOWER VRAM")
+                log_with_timestamp(f"   {model_file.name} ({size_mb:.1f} MB) - FAST, LOWER VRAM")
             else:
-                log_with_timestamp(f"   📄 {model_file.name} ({size_mb:.1f} MB)")
+                log_with_timestamp(f"   {model_file.name} ({size_mb:.1f} MB)")
     
     # List other models
     if other_files:
@@ -190,16 +190,16 @@ def list_available_models():
         for model_file in sorted(other_files):
             size_mb = model_file.stat().st_size / (1024 * 1024)
             if model_file.name == "GFPGANv1.4.pth":
-                log_with_timestamp(f"   🎨 {model_file.name} ({size_mb:.1f} MB) - FACE ENHANCEMENT")
+                log_with_timestamp(f"   {model_file.name} ({size_mb:.1f} MB) - FACE ENHANCEMENT")
             else:
-                log_with_timestamp(f"   📄 {model_file.name} ({size_mb:.1f} MB)")
+                log_with_timestamp(f"   {model_file.name} ({size_mb:.1f} MB)")
 
 def get_model_recommendations():
     """Provide model recommendations based on user's hardware/needs"""
-    log_with_timestamp("💡 Model Recommendations:")
-    log_with_timestamp("   🏆 inswapper_128.onnx - Best quality, requires more VRAM")
-    log_with_timestamp("   ⚡ inswapper_128_fp16.onnx - Faster processing, less VRAM")
-    log_with_timestamp("   🎨 GFPGANv1.4.pth - Face enhancement (optional but recommended)")
+    log_with_timestamp("Model Recommendations:")
+    log_with_timestamp("   inswapper_128.onnx - Best quality, requires more VRAM")
+    log_with_timestamp("   inswapper_128_fp16.onnx - Faster processing, less VRAM")
+    log_with_timestamp("   GFPGANv1.4.pth - Face enhancement (optional but recommended)")
     log_with_timestamp("")
     log_with_timestamp("   Choose inswapper_128.onnx if you have 6GB+ VRAM")
     log_with_timestamp("   Choose inswapper_128_fp16.onnx if you have 4GB or less VRAM")

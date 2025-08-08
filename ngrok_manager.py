@@ -41,13 +41,13 @@ class NgrokManager:
             result = subprocess.run(['ngrok', 'config', 'add-authtoken', auth_token],
                                   capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
-                logger.info("✅ Ngrok auth token configured successfully")
+                logger.info("Ngrok auth token configured successfully")
                 return True
             else:
-                logger.error(f"❌ Failed to configure auth token: {result.stderr}")
+                logger.error(f"Failed to configure auth token: {result.stderr}")
                 return False
         except Exception as e:
-            logger.error(f"❌ Error configuring auth token: {e}")
+            logger.error(f"Error configuring auth token: {e}")
             return False
     
     def start_tunnel(self, port: int, auth_token: Optional[str] = None, 
@@ -65,8 +65,8 @@ class NgrokManager:
             Public URL if successful, None otherwise
         """
         if not self.is_ngrok_installed():
-            logger.error("❌ Ngrok is not installed or not in PATH")
-            logger.info("💡 Install ngrok from: https://ngrok.com/download")
+            logger.error("Ngrok is not installed or not in PATH")
+            logger.info("Install ngrok from: https://ngrok.com/download")
             return None
         
         # Setup auth token if provided
@@ -81,7 +81,7 @@ class NgrokManager:
             cmd.extend(['--subdomain', subdomain])
         
         try:
-            logger.info(f"🚀 Starting ngrok tunnel for port {port}...")
+            logger.info(f"Starting ngrok tunnel for port {port}...")
             self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, 
                                           stderr=subprocess.PIPE)
             
@@ -91,15 +91,15 @@ class NgrokManager:
                 url = self._get_tunnel_url()
                 if url:
                     self.tunnel_url = url
-                    logger.info(f"✅ Ngrok tunnel active: {url}")
+                    logger.info(f"Ngrok tunnel active: {url}")
                     return url
             
-            logger.error("❌ Failed to get ngrok tunnel URL")
+            logger.error("Failed to get ngrok tunnel URL")
             self.stop_tunnel()
             return None
             
         except Exception as e:
-            logger.error(f"❌ Failed to start ngrok tunnel: {e}")
+            logger.error(f"Failed to start ngrok tunnel: {e}")
             return None
     
     def _get_tunnel_url(self) -> Optional[str]:
@@ -128,9 +128,9 @@ class NgrokManager:
                 logger.info("🛑 Ngrok tunnel stopped")
             except subprocess.TimeoutExpired:
                 self.process.kill()
-                logger.warning("⚠️  Ngrok process killed (didn't terminate gracefully)")
+                logger.warning("Ngrok process killed (didn't terminate gracefully)")
             except Exception as e:
-                logger.error(f"❌ Error stopping ngrok: {e}")
+                logger.error(f"Error stopping ngrok: {e}")
             finally:
                 self.process = None
                 self.tunnel_url = None
@@ -184,10 +184,10 @@ class NgrokManager:
                             tunnel_port = addr
                         
                         if tunnel_port.isdigit() and int(tunnel_port) == expected_port:
-                            logger.info(f"✅ Tunnel verified: {self.tunnel_url} -> {addr}")
+                            logger.info(f"Tunnel verified: {self.tunnel_url} -> {addr}")
                             return True
                         else:
-                            logger.warning(f"⚠️  Port mismatch: tunnel points to {addr}, expected localhost:{expected_port}")
+                            logger.warning(f"Port mismatch: tunnel points to {addr}, expected localhost:{expected_port}")
                             return False
         except Exception as e:
             logger.warning(f"Could not verify tunnel: {e}")
@@ -222,7 +222,7 @@ class NgrokManager:
     def print_tunnel_info(self):
         """Print user-friendly tunnel information"""
         if not self.tunnel_url:
-            print("❌ No active ngrok tunnel")
+            print("No active ngrok tunnel")
             return
         
         info = self.get_tunnel_info()
@@ -231,25 +231,25 @@ class NgrokManager:
         dashboard_status = self._check_dashboard_accessible()
         
         print("\n" + "="*60)
-        print("🌐 NGROK TUNNEL ACTIVE")
+        print("NGROK TUNNEL ACTIVE")
         print("="*60)
-        print(f"📡 Public URL: {self.tunnel_url}")
-        print(f"🔒 Protocol: {info.get('proto', 'unknown').upper()}")
+        print(f"Public URL: {self.tunnel_url}")
+        print(f"Protocol: {info.get('proto', 'unknown').upper()}")
         
         # Show local server info if available
         config = info.get('config', {})
         local_addr = config.get('addr', 'unknown')
         if local_addr != 'unknown':
-            print(f"🏠 Local Server: {local_addr}")
+            print(f"Local Server: {local_addr}")
         
-        print("💡 Share this URL to let others access your Face Swap Live server!")
-        print("⚠️  Warning: Anyone with this URL can access your server")
+        print("Share this URL to let others access your Face Swap Live server!")
+        print("Warning: Anyone with this URL can access your server")
         
         # Show dashboard with status
         if dashboard_status:
-            print(f"🔧 Ngrok Dashboard: {self.dashboard_url} ✅")
+            print(f"Ngrok Dashboard: {self.dashboard_url} [ACCESSIBLE]")
         else:
-            print(f"🔧 Ngrok Dashboard: {self.dashboard_url} ⚠️ (may not be ready yet)")
+            print(f"Ngrok Dashboard: {self.dashboard_url} [NOT READY]")
         
         print("="*60)
     

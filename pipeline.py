@@ -136,7 +136,7 @@ class FaceSwapPipeline:
             if detected_face is not None:
                 self.source_face = detected_face
                 # log_with_timestamp("✅ Source face extracted and stored successfully!")
-                print("✅ Source face ready")  # Only success message
+                print("Source face ready")  # Only success message
                 return True
             else:
                 self.source_face = None
