@@ -129,14 +129,22 @@ Detailed documentation is available in the `docs/` directory:
 
 This project is licensed under the AGPL-3.0 License. See [LICENSE](LICENSE) for details.
 
-## Acknowledgments
+## Inspiration
 
-This project was inspired by [Deep-Live-Cam](https://github.com/hacksider/Deep-Live-Cam). We wanted to create a web-based interface with easier setup and deployment options. Many architectural concepts and approaches were adapted from that excellent project.
+The idea for Face Swap Live came from a simple need: most face swapping applications I found were GUI-based desktop applications that were difficult to set up and configure. I wanted something web-based that would be easy to set up and quick to use - just for fun! That's where it all began.
 
-Special thanks to:
-- The Deep-Live-Cam project for inspiration and technical foundation
-- InsightFace team for the face analysis models
-- The open-source community for the underlying AI models
+The goal was to create a simple, accessible face swapping experience that anyone could use through their browser without complex installation procedures.
+
+## Credits
+
+This project uses AI models and libraries from the open-source community:
+
+- **[InsightFace](https://github.com/deepinsight/insightface)** - Face analysis and detection models
+- **[GFPGAN](https://github.com/TencentARC/GFPGAN)** - Face enhancement technology
+- **Flask & SocketIO** - Web framework and real-time communication
+- **ONNX Runtime** - Model inference optimization
+
+All models and libraries are used in accordance with their respective licenses.
 
 ## Support
 
