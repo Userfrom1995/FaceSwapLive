@@ -126,7 +126,7 @@ Configuration is managed through `config.py`. Key settings:
 
 ## License
 
-This project is licensed under the AGPL-3.0 License. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Inspiration
 
@@ -151,6 +151,38 @@ All models and libraries are used in accordance with their respective licenses.
 - **Documentation**: Check the `docs/` directory for detailed guides
 - **Community**: Join discussions in GitHub Discussions
 
+## Ethical Use and Legal Disclaimer
+
+### Important Notice
+
+This software is intended for **educational, research, and entertainment purposes only**.
+
+### Consent Requirement
+- **You MUST obtain explicit consent** before processing any person's image
+- Using images without consent may violate privacy laws and ethical standards
+- The responsibility for obtaining consent lies solely with the user
+
+### Prohibited Uses
+- Creating non-consensual intimate imagery
+- Harassment, bullying, or defamation
+- Identity theft or impersonation
+- Spreading misinformation or fake content
+- Any illegal or unauthorized activities
+
+### User Responsibility
+- Users are solely responsible for their use of this software
+- Users must comply with all applicable laws and regulations
+- Users must respect the privacy and dignity of all individuals
+- Users should clearly disclose when content has been modified using AI
+
+### Developer Disclaimer
+- The developers provide this software "as is" without any warranties
+- The developers are not responsible for any misuse of this software
+- The developers do not endorse or support any unethical or illegal use
+- Users assume all risks and legal responsibilities for their actions
+
+**By using this software, you acknowledge that you have read, understood, and agree to comply with these ethical guidelines and legal requirements.**
+
 ---
 
-**Note**: This application is for educational and research purposes. Please ensure you have proper consent when using face swapping technology with other people's images.
+**Remember**: Always use this technology responsibly and ethically. Obtain consent, respect privacy, and follow all applicable laws.
