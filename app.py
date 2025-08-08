@@ -21,6 +21,14 @@ import os
 import logging
 from pathlib import Path
 
+# Load .env file first (lowest priority)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv not installed, skip .env file loading
+    pass
+
 # Add project root to Python path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
@@ -241,22 +249,38 @@ def apply_arguments(args):
         config.models.MODELS_DIR = Path(args.models_dir)
         logger.info(f"Models directory set to: {config.models.MODELS_DIR}")
     
-    # Apply ngrok arguments
+    # Apply ngrok arguments with proper priority
     if args.ngrok:
         config.ngrok.ENABLE_NGROK = True
         logger.info("Ngrok tunnel enabled")
     
+    # Ngrok auth token priority: Command Line > Environment Variable > .env file
     if args.ngrok_auth_token:
+        # Highest priority: Command line argument
         config.ngrok.AUTH_TOKEN = args.ngrok_auth_token
-        logger.info("Ngrok auth token provided")
+        logger.info("Ngrok auth token provided via command line")
+    elif os.getenv('NGROK_AUTH_TOKEN'):
+        # Medium priority: Environment variable
+        config.ngrok.AUTH_TOKEN = os.getenv('NGROK_AUTH_TOKEN')
+        logger.info("Ngrok auth token loaded from environment variable")
+    # Note: .env file values are already loaded into os.environ by load_dotenv()
+    # so os.getenv() will find them if no environment variable is set
     
+    # Ngrok subdomain priority: Command Line > Environment Variable > .env file
     if args.ngrok_subdomain:
         config.ngrok.SUBDOMAIN = args.ngrok_subdomain
-        logger.info(f"Ngrok subdomain set to: {args.ngrok_subdomain}")
+        logger.info(f"Ngrok subdomain set via command line: {args.ngrok_subdomain}")
+    elif os.getenv('NGROK_SUBDOMAIN'):
+        config.ngrok.SUBDOMAIN = os.getenv('NGROK_SUBDOMAIN')
+        logger.info(f"Ngrok subdomain loaded from environment: {config.ngrok.SUBDOMAIN}")
     
+    # Ngrok region priority: Command Line > Environment Variable > .env file
     if args.ngrok_region:
         config.ngrok.REGION = args.ngrok_region
-        logger.info(f"Ngrok region set to: {args.ngrok_region}")
+        logger.info(f"Ngrok region set via command line: {args.ngrok_region}")
+    elif os.getenv('NGROK_REGION'):
+        config.ngrok.REGION = os.getenv('NGROK_REGION')
+        logger.info(f"Ngrok region loaded from environment: {config.ngrok.REGION}")
 
 def main():
     """Main application entry point"""

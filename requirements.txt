@@ -27,7 +27,7 @@ tqdm
 pyngrok
 
 
-# Development and debugging (optional)
+# Development and debugging
 # Uncomment for development
-# flask-cors==4.0.0
-# python-dotenv==1.0.0
+flask-cors==4.0.0
+python-dotenv==1.0.0

@@ -1,78 +1,149 @@
-# Face Swap Live - Real-time Face Swapping Server
+# Face Swap Live
 
-A high-performance, real-time face swapping application optimized for single-user usage with maximum FPS and quality.
+A high-performance, real-time face swapping application with web interface and public access capabilities.
+
+## Overview
+
+Face Swap Live provides real-time face swapping through a web browser interface. The application features GPU acceleration, automatic model management, and integrated ngrok support for public access. It's designed for both local development and cloud deployment (Google Colab).
 
 ## Features
 
-- **Real-time Processing**: High-performance face swapping with GPU acceleration
-- **Single User Optimized**: Dedicated resources for one user at a time
-- **Professional UI**: Clean, responsive web interface with live video feeds
-- **Smart Port Management**: Automatic port detection and conflict resolution
-- **Proper Cleanup**: Clean server shutdown and resource management
-- **Performance Monitoring**: Real-time statistics and processing metrics
+- **Real-time Processing**: GPU-accelerated face swapping with optimized performance
+- **Web Interface**: Browser-based interface accessible from any device
+- **Public Access**: Integrated ngrok support for sharing and remote access
+- **Automatic Setup**: Models download automatically on first run
+- **Cloud Ready**: Full Google Colab support with one-click deployment
+- **Professional Grade**: Enterprise-ready codebase with comprehensive logging
+
+## Quick Start
+
+### Local Installation
+
+```bash
+git clone https://github.com/Userfrom1995/FaceSwapLive.git
+cd FaceSwapLive
+pip install -r requirements.txt
+python app.py
+```
+
+### Google Colab
+
+Open the notebook directly in Colab:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Userfrom1995/FaceSwapLive/blob/main/FaceSwapLive.ipynb)
+
+### Public Access (Ngrok)
+
+```bash
+python app.py --ngrok --ngrok-auth-token YOUR_TOKEN
+```
 
 ## Project Structure
 
 ```
 FaceSwapLive/
-├── README.md                 # Project documentation
-├── requirements.txt          # Python dependencies
-├── config.py                # Configuration settings
-├── pipeline.py              # Face swap processing pipeline
-├── server.py                # Main Flask-SocketIO server
-├── app.py                   # Application entry point
-├── templates/               # HTML templates
-│   └── index.html          # Main web interface
-├── static/                  # Static assets
-│   ├── css/
-│   │   └── style.css       # Stylesheet
-│   └── js/
-│       └── app.js          # Client-side JavaScript
-└── models/                  # AI model files (auto-created)
+├── app.py                 # Main application entry point
+├── server.py              # Optimized Flask server
+├── pipeline.py            # Face processing pipeline
+├── models.py              # Model management and downloading
+├── config.py              # Configuration management
+├── ngrok_manager.py       # Ngrok tunnel management
+├── FaceSwapLive.ipynb     # Google Colab notebook
+├── models/                # AI models directory
+│   └── instructions.txt   # Model setup instructions
+├── templates/             # Web interface templates
+├── static/                # Static assets (CSS, JS)
+├── docs/                  # Documentation
+└── requirements.txt       # Python dependencies
 ```
 
-## Quick Start
+## Models
 
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+The application uses two AI models:
 
-2. **Run the Server**:
-   ```bash
-   python app.py
-   ```
+- **inswapper_128.onnx** (530MB): High-quality face swapping model
+- **GFPGANv1.4.pth** (332MB): Face enhancement model
 
-3. **Access the Application**:
-   - Open your browser to the displayed URL (e.g., http://localhost:5000)
-   - Upload a source face image
-   - Allow camera access
-   - Enjoy real-time face swapping!
+Models are downloaded automatically on first run. Manual download links are available in `models/instructions.txt`.
 
-## Requirements
+## Hardware Requirements
 
-- Python 3.8+
-- CUDA-compatible GPU (recommended)
-- Webcam or video input device
-- Modern web browser with WebRTC support
+### Recommended
+- GPU: 4GB+ VRAM (NVIDIA with CUDA support)
+- RAM: 8GB+
+- Storage: 2GB free space
 
-## Performance Notes
+### Minimum
+- GPU: 2GB VRAM or CPU processing
+- RAM: 4GB
+- Storage: 1GB free space
 
-- Optimized for single user to maximize performance
-- Automatic GPU detection and acceleration
-- Smart frame rate adjustment based on processing capability
-- Memory-efficient processing pipeline
+## Usage
 
-## Stopping the Server
+### Basic Usage
+1. Start the server: `python app.py`
+2. Open browser to displayed URL
+3. Upload a source face image
+4. Enable webcam to see real-time face swapping
 
-- Press `Ctrl+C` in the terminal
-- Server will automatically cleanup and release ports
-- All resources properly freed
+### Public Access
+1. Get ngrok auth token from [ngrok.com](https://ngrok.com)
+2. Start with ngrok: `python app.py --ngrok --ngrok-auth-token YOUR_TOKEN`
+3. Share the generated public URL
+
+### Google Colab
+1. Open the notebook in Colab
+2. Run all cells
+3. Replace the auth token placeholder with your ngrok token
+4. Access via the generated public URL
 
 ## Configuration
 
-Edit `config.py` to customize:
-- Server host and port settings
-- Processing parameters
-- Model paths
-- Performance tuning options
+Configuration is managed through `config.py`. Key settings:
+
+- **Server**: Host, port, and performance settings
+- **Processing**: Frame rate, quality, and optimization
+- **Models**: Model paths and download URLs
+- **Ngrok**: Tunnel configuration and security
+- **Security**: Rate limiting and access control
+
+## Documentation
+
+Detailed documentation is available in the `docs/` directory:
+
+- [Project Structure](docs/project-structure.md)
+- [Ngrok Setup Guide](docs/ngrok-setup.md)
+- [Pipeline Architecture](docs/pipeline-architecture.md)
+- [Configuration Reference](docs/configuration.md)
+- [Troubleshooting](docs/troubleshooting.md)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the AGPL-3.0 License. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+This project was inspired by [Deep-Live-Cam](https://github.com/hacksider/Deep-Live-Cam). We wanted to create a web-based interface with easier setup and deployment options. Many architectural concepts and approaches were adapted from that excellent project.
+
+Special thanks to:
+- The Deep-Live-Cam project for inspiration and technical foundation
+- InsightFace team for the face analysis models
+- The open-source community for the underlying AI models
+
+## Support
+
+- **Issues**: Report bugs and feature requests via GitHub Issues
+- **Documentation**: Check the `docs/` directory for detailed guides
+- **Community**: Join discussions in GitHub Discussions
+
+---
+
+**Note**: This application is for educational and research purposes. Please ensure you have proper consent when using face swapping technology with other people's images.

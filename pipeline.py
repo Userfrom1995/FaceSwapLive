@@ -50,27 +50,33 @@ class FaceSwapPipeline:
         try:
             # log_with_timestamp("⚡ Initializing face processing models...")
             
-            # GPU optimization
-            if torch.cuda.is_available():
+            # GPU optimization - respect configuration
+            from config import config
+            use_gpu = config.models.USE_GPU and torch.cuda.is_available()
+            
+            if use_gpu:
                 providers = [
                     ('CUDAExecutionProvider', {
                         'device_id': 0,
-                        'gpu_mem_limit': 6 * 1024 * 1024 * 1024,
+                        'gpu_mem_limit': config.models.GPU_MEMORY_LIMIT,
                         'arena_extend_strategy': 'kNextPowerOfTwo',
                         'cudnn_conv_algo_search': 'HEURISTIC',
                         'do_copy_in_default_stream': True,
                     }),
                     'CPUExecutionProvider'
                 ]
-                # log_with_timestamp("🎮 GPU acceleration enabled")
+                log_error("GPU acceleration enabled")
             else:
                 providers = ['CPUExecutionProvider']
-                # log_with_timestamp("💻 Using CPU processing")
+                if not torch.cuda.is_available():
+                    log_error("CUDA not available, using CPU processing")
+                else:
+                    log_error("GPU disabled by configuration, using CPU processing")
             
             # Initialize face analysis
             # log_with_timestamp("🔄 Loading face analysis model...")
             self.face_app = FaceAnalysis(name='buffalo_l', providers=providers)
-            self.face_app.prepare(ctx_id=0 if torch.cuda.is_available() else -1, det_size=(320, 320))
+            self.face_app.prepare(ctx_id=0 if use_gpu else -1, det_size=(320, 320))
             # log_with_timestamp("✅ Face analysis model ready")
             
             # Ensure models are available (download if necessary)
