@@ -71,10 +71,9 @@ class ModelConfig:
     # Model directory
     MODELS_DIR = Path(__file__).parent / "models"
     
-    # Face swapper models (in priority order)
+    # Face swapper model (best quality only)
     FACE_SWAPPER_MODELS = [
-        "inswapper_128.onnx",           # High quality model (best quality)
-        "inswapper_128_fp16.onnx"       # Optimized FP16 model (faster, less VRAM)
+        "inswapper_128.onnx",           # High quality model
     ]
     
     # Face enhancement models
@@ -85,7 +84,6 @@ class ModelConfig:
     # Model download URLs
     MODEL_URLS = {
         "inswapper_128.onnx": "https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/inswapper_128.onnx",
-        "inswapper_128_fp16.onnx": "https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/inswapper_128_fp16.onnx",
         "GFPGANv1.4.pth": "https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/GFPGANv1.4.pth"
     }
     
