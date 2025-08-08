@@ -57,14 +57,14 @@ FaceSwapLive/
 └── requirements.txt       # Python dependencies
 ```
 
-## Models
+## AI Models
 
-The application uses two AI models:
+Face Swap Live uses two AI models that download automatically:
 
-- **inswapper_128.onnx** (530MB): High-quality face swapping model
-- **GFPGANv1.4.pth** (332MB): Face enhancement model
+- **inswapper_128.onnx** (530MB) - Face swapping model
+- **GFPGANv1.4.pth** (332MB) - Face enhancement model
 
-Models are downloaded automatically on first run. Manual download links are available in `models/instructions.txt`.
+Manual download instructions are available in `models/instructions.txt`.
 
 ## Hardware Requirements
 
@@ -81,21 +81,21 @@ Models are downloaded automatically on first run. Manual download links are avai
 ## Usage
 
 ### Basic Usage
-1. Start the server: `python app.py`
+1. Start server: `python app.py`
 2. Open browser to displayed URL
-3. Upload a source face image
-4. Enable webcam to see real-time face swapping
+3. Upload source face image
+4. Enable webcam for real-time face swapping
 
 ### Public Access
 1. Get ngrok auth token from [ngrok.com](https://ngrok.com)
-2. Start with ngrok: `python app.py --ngrok --ngrok-auth-token YOUR_TOKEN`
+2. Run: `python app.py --ngrok --ngrok-auth-token YOUR_TOKEN`
 3. Share the generated public URL
 
 ### Google Colab
-1. Open the notebook in Colab
-2. Run all cells
-3. Replace the auth token placeholder with your ngrok token
-4. Access via the generated public URL
+1. Open notebook in Colab
+2. Execute all cells in order
+3. Replace auth token placeholder with your token
+4. Access via generated public URL
 
 ## Configuration
 
@@ -109,13 +109,12 @@ Configuration is managed through `config.py`. Key settings:
 
 ## Documentation
 
-Detailed documentation is available in the `docs/` directory:
-
-- [Project Structure](docs/project-structure.md)
-- [Ngrok Setup Guide](docs/ngrok-setup.md)
-- [Pipeline Architecture](docs/pipeline-architecture.md)
-- [Configuration Reference](docs/configuration.md)
-- [Troubleshooting](docs/troubleshooting.md)
+- [Installation](docs/installation.md) - Setup instructions
+- [Ngrok Setup](docs/ngrok.md) - Public access configuration
+- [Arguments Reference](docs/arguments.md) - Command line options
+- [Configuration](docs/configuration.md) - Configuration options
+- [API Reference](docs/api-reference.md) - Server endpoints and WebSocket events
+- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
 
 ## Contributing
 

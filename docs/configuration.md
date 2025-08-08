@@ -1,14 +1,15 @@
 # Configuration Reference
 
-This document provides a comprehensive reference for all configuration options in Face Swap Live.
+Complete reference for Face Swap Live configuration options.
 
-## Configuration System
+## Configuration Hierarchy
 
-Face Swap Live uses a hierarchical configuration system with the following precedence (highest to lowest):
+Configuration is loaded in this order (highest priority first):
 
-1. **Command Line Arguments**: Runtime parameters
-2. **Environment Variables**: System-level configuration
-3. **Default Values**: Built-in defaults in `config.py`
+1. **Command Line Arguments** - Runtime parameters
+2. **Environment Variables** - System-level settings  
+3. **`.env` File** - Project defaults
+4. **Built-in Defaults** - Default values in `config.py`
 
 ## Configuration Classes
 
