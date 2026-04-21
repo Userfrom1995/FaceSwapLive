@@ -30,4 +30,4 @@ pyngrok
 # Development and debugging
 # Uncomment for development
 flask-cors==6.0.0
-python-dotenv==1.0.0
+python-dotenv==1.2.2
