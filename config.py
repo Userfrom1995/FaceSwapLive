@@ -52,7 +52,7 @@ class ProcessingConfig:
     WEBCAM_FPS = 30          # Preferred webcam FPS
     
     # Quality settings
-    JPEG_QUALITY = 85        # JPEG compression quality (1-100)
+    JPEG_QUALITY = 95        # JPEG compression quality (1-100)
     CANVAS_ALPHA = False     # Disable alpha channel for better performance
     IMAGE_SMOOTHING = True   # Enable image smoothing
     

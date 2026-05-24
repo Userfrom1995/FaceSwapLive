@@ -23,8 +23,8 @@ const FaceSwapApp = {
         statsInterval: null
     },
     config: {
-        targetFPS: 15,  // Increased from 12
-        processingInterval: 67, // ~15 FPS
+        targetFPS: 30,
+        processingInterval: 33, // 30 FPS check rate
         statsUpdateInterval: 1000,
         maxLogEntries: 10,  // Reduced from 30
         webcamConstraints: {
@@ -203,7 +203,7 @@ function processFrame() {
     const contexts = FaceSwapApp.contexts;
     const state = FaceSwapApp.state;
     
-    if (!elements.webcam.videoWidth || !elements.webcam.videoHeight) {
+    if (!elements.webcam.videoWidth || !elements.webcam.videoHeight || !state.connected || state.isProcessing) {
         return;
     }
     
@@ -223,16 +223,18 @@ function processFrame() {
         
         contexts.capture.drawImage(elements.webcam, 0, 0);
         
-        if (state.sourceUploaded && state.connected) {
-            const frameData = elements.captureCanvas.toDataURL('image/jpeg', 0.8);
-            FaceSwapApp.socket.emit('process_frame', { frame: frameData });
+        if (state.sourceUploaded) {
+            elements.captureCanvas.toBlob((blob) => {
+                FaceSwapApp.socket.emit('process_frame', { frame: blob });
+            }, 'image/jpeg', 0.85);
+        } else {
+            state.isProcessing = false;
         }
         
         elements.frameCount.textContent = state.frameCount;
         
     } catch (error) {
         addLog('Frame processing error', 'error');
-    } finally {
         state.isProcessing = false;
     }
 }
@@ -261,26 +263,38 @@ function handleProcessedFrame(data) {
     const state = FaceSwapApp.state;
     const elements = FaceSwapApp.elements;
     
+    // UNLOCK PROCESSING FOR NEXT FRAME
+    state.isProcessing = false;
+    
     try {
         if (data.processed) {
             const img = new Image();
             img.onload = () => {
                 updateOutputCanvas(img);
-                
-                if (elements.outputOverlay && !elements.outputOverlay.classList.contains('hidden')) {
-                    elements.outputOverlay.classList.add('hidden');
-                }
-                
-                if (data.success) {
-                    state.swapCount++;
-                } else {
-                    state.errorCount++;
-                }
-            };
-            img.onerror = () => {
+            if (typeof data.processed !== 'string') {
+                URL.revokeObjectURL(img.src);
+            }
+            
+            if (elements.outputOverlay && !elements.outputOverlay.classList.contains('hidden')) {
+                elements.outputOverlay.classList.add('hidden');
+            }
+            
+            if (data.success) {
+                state.swapCount++;
+            } else {
                 state.errorCount++;
-            };
+            }
+        };
+        img.onerror = () => {
+            state.errorCount++;
+        };
+        
+        if (typeof data.processed !== 'string') {
+            const blob = new Blob([data.processed], { type: 'image/jpeg' });
+            img.src = URL.createObjectURL(blob);
+        } else {
             img.src = data.processed;
+        }
         }
         
         if (data.stats) {

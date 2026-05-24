@@ -12,18 +12,16 @@ import io
 from PIL import Image
 import time
 import os
-import traceback
 from datetime import datetime
 from typing import Optional, Tuple, Union
 from config import config
 from models import get_best_models
 
-def log_with_timestamp(message):
-    """ONLY log critical errors - removed performance overhead"""
-    pass  # Disabled for performance
+def log_info(message):
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    print(f"[{timestamp}] INFO: {message}")
 
 def log_error(message):
-    """Log only critical errors"""
     timestamp = datetime.now().strftime("%H:%M:%S")
     print(f"[{timestamp}] ERROR: {message}")
 
@@ -35,22 +33,16 @@ class FaceSwapPipeline:
         self.face_swapper = None
         self.source_face = None
         
-        # Performance tracking (minimal)
+        # Performance tracking
         self.frame_counter = 0
         self.swap_counter = 0
         self.error_counter = 0
         self.processing_times = []
-        self.max_time_samples = 20  # Reduced from 100
-        
-        # Remove verbose logging
-        # log_with_timestamp("Face swap pipeline created")
+        self.max_time_samples = 20
     
     def initialize_models(self) -> bool:
         """Initialize models - only log critical errors"""
         try:
-            # log_with_timestamp("⚡ Initializing face processing models...")
-            
-            # GPU optimization - respect configuration
             from config import config
             use_gpu = config.models.USE_GPU and torch.cuda.is_available()
             
@@ -65,19 +57,14 @@ class FaceSwapPipeline:
                     }),
                     'CPUExecutionProvider'
                 ]
-                log_error("GPU acceleration enabled")
+                log_info("GPU acceleration enabled")
             else:
                 providers = ['CPUExecutionProvider']
-                if not torch.cuda.is_available():
-                    log_error("CUDA not available, using CPU processing")
-                else:
-                    log_error("GPU disabled by configuration, using CPU processing")
+                log_info("Using CPU processing")
             
             # Initialize face analysis
-            # log_with_timestamp("🔄 Loading face analysis model...")
             self.face_app = FaceAnalysis(name='buffalo_l', providers=providers)
             self.face_app.prepare(ctx_id=0 if use_gpu else -1, det_size=(320, 320))
-            # log_with_timestamp("✅ Face analysis model ready")
             
             # Ensure models are available (download if necessary)
             from models import ensure_models_available
@@ -90,18 +77,15 @@ class FaceSwapPipeline:
             
             if face_swapper_path and os.path.exists(face_swapper_path):
                 try:
-                    # log_with_timestamp(f"🔄 Loading: {face_swapper_path}")
                     self.face_swapper = insightface.model_zoo.get_model(face_swapper_path, providers=providers)
-                    # log_with_timestamp(f"✅ Face swapper loaded: {os.path.basename(face_swapper_path)}")
                     
-                    # Model warmup - silent
+                    # Model warmup
                     dummy_img = np.random.randint(0, 255, (320, 320, 3), dtype=np.uint8)
                     self.face_app.get(dummy_img)
-                    # log_with_timestamp("🔥 Model warmup completed")
                     return True
                     
                 except Exception as e:
-                    log_error(f"Failed to load {face_swapper_path}: {e}")
+                    log_error(f"Failed to load swapper: {e}")
                     return False
             else:
                 log_error("CRITICAL: No face swapper model could be loaded!")
@@ -112,90 +96,70 @@ class FaceSwapPipeline:
             return False
     
     def detect_face_optimized(self, image):
-        """Optimized face detection - no logging for performance"""
+        """Optimized face detection"""
         try:
-            # log_with_timestamp(f"🔍 Analyzing image shape: {image.shape}")
             faces = self.face_app.get(image)
-            
             if faces:
-                # log_with_timestamp(f"👥 Detected {len(faces)} face(s)")
-                # Return largest face
                 largest_face = max(faces, key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]))
-                # bbox = largest_face.bbox
-                # log_with_timestamp(f"📐 Best face bbox: [{bbox[0]:.1f}, {bbox[1]:.1f}, {bbox[2]:.1f}, {bbox[3]:.1f}]")
                 return largest_face
-            else:
-                # log_with_timestamp("❌ No faces detected in frame")
-                return None
-                
+            return None
         except Exception as e:
-            # Only log every 100th error to avoid spam
             if self.error_counter % 100 == 0:
                 log_error(f"Face detection error: {e}")
             return None
     
     def set_source_face(self, source_image) -> bool:
-        """Set source face - minimal logging"""
+        """Set source face"""
         try:
             detected_face = self.detect_face_optimized(source_image)
-            
             if detected_face is not None:
                 self.source_face = detected_face
-                # log_with_timestamp("✅ Source face extracted and stored successfully!")
-                print("Source face ready")  # Only success message
+                print("Source face ready")
                 return True
             else:
                 self.source_face = None
                 log_error("No face detected in source image")
                 return False
-                
         except Exception as e:
             log_error(f"Upload processing error: {e}")
             return False
     
-    def process_frame_realtime(self, frame_data: str) -> Tuple[str, bool]:
-        """
-        ULTRA FAST frame processing - removed all logging overhead
-        """
+    def process_frame_realtime(self, frame_data: Union[str, bytes]) -> Tuple[str, bool]:
+        """ULTRA FAST frame processing with binary and OpenCV optimization"""
         self.frame_counter += 1
-        
-        # Skip ALL logging for performance - only track counts
         if self.source_face is None or self.face_swapper is None:
-            return frame_data, False
+            return frame_data if isinstance(frame_data, str) else "", False
         
         try:
             process_start = time.time()
             
-            # Decode frame - NO LOGGING
-            if ',' in frame_data:
-                image_data = base64.b64decode(frame_data.split(',')[1])
+            # Decode frame using OpenCV directly for max speed
+            if isinstance(frame_data, str):
+                if ',' in frame_data:
+                    image_data = base64.b64decode(frame_data.split(',')[1])
+                else:
+                    image_data = base64.b64decode(frame_data)
             else:
-                image_data = base64.b64decode(frame_data)
+                image_data = frame_data # Handle raw binary bytes
             
-            image = Image.open(io.BytesIO(image_data))
-            frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            nparr = np.frombuffer(image_data, np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
-            # Face detection - NO LOGGING
+            # Face detection
             target_face = self.detect_face_optimized(frame)
             
             if target_face is not None:
-                # Face swap - NO LOGGING
+                # Face swap using standard InsightFace API
                 swapped_frame = self.face_swapper.get(frame, target_face, self.source_face, paste_back=True)
                 self.swap_counter += 1
                 
-                # Quick enhancement
-                enhanced_frame = cv2.convertScaleAbs(swapped_frame, alpha=1.05, beta=5)
-                
-                # Convert and encode - NO LOGGING
-                result_rgb = cv2.cvtColor(enhanced_frame, cv2.COLOR_BGR2RGB)
-                result_image = Image.fromarray(result_rgb)
-                
-                buffer = io.BytesIO()
-                result_image.save(buffer, format='JPEG', quality=85)
-                result_b64 = base64.b64encode(buffer.getvalue()).decode()
+                # Convert and encode directly with OpenCV to JPEG
+                quality = config.processing.JPEG_QUALITY
+                _, buffer = cv2.imencode('.jpg', swapped_frame, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
+                result_b64 = base64.b64encode(buffer).decode('utf-8')
                 result_data = f"data:image/jpeg;base64,{result_b64}"
                 
-                # Minimal timing tracking
+                # Timing tracking
                 total_time = time.time() - process_start
                 self.processing_times.append(total_time * 1000)
                 if len(self.processing_times) > self.max_time_samples:
@@ -203,26 +167,19 @@ class FaceSwapPipeline:
                 
                 return result_data, True
             
-            else:
-                # No logging for missing faces - too frequent
-                return frame_data, False
+            return frame_data if isinstance(frame_data, str) else "", False
         
         except Exception as e:
             self.error_counter += 1
-            # Only log every 50th error to avoid spam
             if self.error_counter % 50 == 0:
                 log_error(f"Processing error #{self.error_counter}: {e}")
-            return frame_data, False
+            return frame_data if isinstance(frame_data, str) else "", False
     
     def process_image(self, frame_data: str) -> Tuple[str, bool]:
-        """Process single image - delegates to realtime method"""
-        result_data, success = self.process_frame_realtime(frame_data)
-        return result_data, success
+        return self.process_frame_realtime(frame_data)
     
     def get_stats(self) -> dict:
-        """Get performance statistics"""
         avg_time = sum(self.processing_times) / len(self.processing_times) if self.processing_times else 0
-        
         return {
             'frame_count': self.frame_counter,
             'swap_count': self.swap_counter,
@@ -234,27 +191,22 @@ class FaceSwapPipeline:
         }
     
     def reset_stats(self):
-        """Reset performance counters"""
         self.frame_counter = 0
         self.swap_counter = 0
         self.error_counter = 0
         self.processing_times = []
     
     def cleanup(self):
-        """Cleanup resources"""
         self.source_face = None
 
-# Global pipeline instance
 _pipeline_instance = None
 
 def get_pipeline() -> FaceSwapPipeline:
-    """Get the global pipeline instance"""
     global _pipeline_instance
     if _pipeline_instance is None:
         _pipeline_instance = FaceSwapPipeline()
     return _pipeline_instance
 
 def initialize_pipeline() -> bool:
-    """Initialize the global pipeline"""
     pipeline = get_pipeline()
     return pipeline.initialize_models()

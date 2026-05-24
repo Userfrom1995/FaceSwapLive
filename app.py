@@ -36,8 +36,6 @@ sys.path.insert(0, str(project_root))
 from config import config
 from server import start_server
 from pipeline import initialize_pipeline
-# from server_fast import start_fast_server
-# from pipeline_fast import initialize_fast_pipeline
 
 
 # Configure logging
@@ -263,8 +261,6 @@ def apply_arguments(args):
         # Medium priority: Environment variable
         config.ngrok.AUTH_TOKEN = os.getenv('NGROK_AUTH_TOKEN')
         logger.info("Ngrok auth token loaded from environment variable")
-    # Note: .env file values are already loaded into os.environ by load_dotenv()
-    # so os.getenv() will find them if no environment variable is set
     
     # Ngrok subdomain priority: Command Line > Environment Variable > .env file
     if args.ngrok_subdomain:
@@ -324,14 +320,13 @@ def main():
             server_port = get_available_port()
             logger.info(f"Found available port: {server_port}")
         
-        # Start ngrok tunnel if enabled (now we know the exact port)
+        # Start ngrok tunnel if enabled
         if config.ngrok.ENABLE_NGROK:
             from ngrok_manager import NgrokManager
             ngrok_manager = NgrokManager(dashboard_port=config.ngrok.DASHBOARD_PORT)
             
             logger.info(f"Starting ngrok tunnel for port {server_port}...")
             
-            # Start tunnel with the determined port
             tunnel_url = ngrok_manager.start_tunnel(
                 port=server_port,
                 auth_token=config.ngrok.AUTH_TOKEN,
@@ -340,29 +335,21 @@ def main():
             )
             
             if tunnel_url:
-                # Verify the tunnel is correctly configured
                 if ngrok_manager.verify_tunnel(server_port):
                     tunnel_details = ngrok_manager.get_tunnel_details()
                     ngrok_manager.print_tunnel_info()
                     logger.info(f"Ngrok tunnel verified - Server will start on port {server_port}")
-                    logger.info(f"Tunnel: {tunnel_details.get('public_url')} -> {tunnel_details.get('local_addr', f'localhost:{server_port}')}")
-                else:
-                    logger.warning("Tunnel verification failed, but continuing anyway")
-                    ngrok_manager.print_tunnel_info()
                 
-                # Open browser if configured
                 if config.ngrok.AUTO_OPEN_BROWSER:
                     try:
                         import webbrowser
                         webbrowser.open(tunnel_url)
-                        logger.info("Opened tunnel URL in browser")
                     except Exception as e:
                         logger.warning(f"Could not open browser: {e}")
             else:
                 logger.warning("Ngrok tunnel failed to start, continuing with local server only")
-                logger.info(f"Server will be available locally at: http://localhost:{server_port}")
         
-        # Start the actual server with the determined port
+        # Start the actual server
         success = start_server(host=args.host, port=server_port)
         
         if not success:
