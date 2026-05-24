@@ -124,11 +124,11 @@ class FaceSwapPipeline:
             log_error(f"Upload processing error: {e}")
             return False
     
-    def process_frame_realtime(self, frame_data: Union[str, bytes]) -> Tuple[str, bool]:
+    def process_frame_realtime(self, frame_data: Union[str, bytes], return_binary: bool = False) -> Tuple[Union[str, bytes], bool]:
         """ULTRA FAST frame processing with binary and OpenCV optimization"""
         self.frame_counter += 1
         if self.source_face is None or self.face_swapper is None:
-            return frame_data if isinstance(frame_data, str) else "", False
+            return frame_data if isinstance(frame_data, str) else b"", False
         
         try:
             process_start = time.time()
@@ -154,9 +154,14 @@ class FaceSwapPipeline:
                 self.swap_counter += 1
                 
                 # Convert and encode directly with OpenCV to JPEG
-                _, buffer = cv2.imencode('.jpg', swapped_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
-                result_b64 = base64.b64encode(buffer).decode('utf-8')
-                result_data = f"data:image/jpeg;base64,{result_b64}"
+                quality = config.processing.JPEG_QUALITY
+                _, buffer = cv2.imencode('.jpg', swapped_frame, [int(cv2.IMWRITE_JPEG_QUALITY), quality])
+                
+                if return_binary:
+                    result_data = buffer.tobytes()
+                else:
+                    result_b64 = base64.b64encode(buffer).decode('utf-8')
+                    result_data = f"data:image/jpeg;base64,{result_b64}"
                 
                 # Timing tracking
                 total_time = time.time() - process_start
@@ -166,7 +171,7 @@ class FaceSwapPipeline:
                 
                 return result_data, True
             
-            return frame_data if isinstance(frame_data, str) else "", False
+            return frame_data if isinstance(frame_data, str) else b"", False
         
         except Exception as e:
             self.error_counter += 1

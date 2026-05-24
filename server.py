@@ -142,7 +142,7 @@ class OptimizedFaceSwapServer:
             try:
                 # Use optimized pipeline method - NO LOGGING
                 frame_data = data.get('frame', '')
-                processed_data, success = self.pipeline.process_frame_realtime(frame_data)
+                processed_data, success = self.pipeline.process_frame_realtime(frame_data, return_binary=True)
                 
                 if success:
                     self.successful_swaps += 1
