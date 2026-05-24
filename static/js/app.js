@@ -224,8 +224,9 @@ function processFrame() {
         contexts.capture.drawImage(elements.webcam, 0, 0);
         
         if (state.sourceUploaded && state.connected) {
-            const frameData = elements.captureCanvas.toDataURL('image/jpeg', 0.8);
-            FaceSwapApp.socket.emit('process_frame', { frame: frameData });
+            elements.captureCanvas.toBlob((blob) => {
+                FaceSwapApp.socket.emit('process_frame', { frame: blob });
+            }, 'image/jpeg', 0.8);
         }
         
         elements.frameCount.textContent = state.frameCount;
@@ -266,21 +267,30 @@ function handleProcessedFrame(data) {
             const img = new Image();
             img.onload = () => {
                 updateOutputCanvas(img);
-                
-                if (elements.outputOverlay && !elements.outputOverlay.classList.contains('hidden')) {
-                    elements.outputOverlay.classList.add('hidden');
-                }
-                
-                if (data.success) {
-                    state.swapCount++;
-                } else {
-                    state.errorCount++;
-                }
-            };
-            img.onerror = () => {
+            if (typeof data.processed !== 'string') {
+                URL.revokeObjectURL(img.src);
+            }
+            
+            if (elements.outputOverlay && !elements.outputOverlay.classList.contains('hidden')) {
+                elements.outputOverlay.classList.add('hidden');
+            }
+            
+            if (data.success) {
+                state.swapCount++;
+            } else {
                 state.errorCount++;
-            };
+            }
+        };
+        img.onerror = () => {
+            state.errorCount++;
+        };
+        
+        if (typeof data.processed !== 'string') {
+            const blob = new Blob([data.processed], { type: 'image/jpeg' });
+            img.src = URL.createObjectURL(blob);
+        } else {
             img.src = data.processed;
+        }
         }
         
         if (data.stats) {

@@ -65,15 +65,17 @@ def get_best_models() -> Tuple[Optional[str], Optional[str]]:
     """
     models_dir = ensure_models_directory()
     
-    # Face swapper model (best quality only)
-    face_swapper_model = "inswapper_128.onnx"
+    # Face swapper models ordered by preference
+    preferred_models = ["inswapper_128.onnx"]
     
     # Check for face swapper model
     face_swapper_path = None
-    model_path = models_dir / face_swapper_model
-    if model_path.exists() and model_path.stat().st_size > 1000000:  # At least 1MB
-        face_swapper_path = str(model_path)
-        log_with_timestamp(f"Found face swapper: {face_swapper_model}")
+    for swapper_model in preferred_models:
+        model_path = models_dir / swapper_model
+        if model_path.exists() and model_path.stat().st_size > 1000000:  # At least 1MB
+            face_swapper_path = str(model_path)
+            log_with_timestamp(f"Found face swapper: {swapper_model}")
+            break
     
     # Face analysis model (buffalo_l is downloaded automatically by insightface)
     face_analysis_path = "buffalo_l"  # This will be handled by insightface
@@ -84,20 +86,12 @@ def ensure_models_available() -> bool:
     """
     Ensure required models are available with automatic download
     
-    Strategy:
-    1. If user has inswapper_128.onnx -> use it, download GFPGAN if missing
-    2. If user has no face swapper -> download inswapper_128.onnx (best quality)
-    3. Always ensure GFPGAN is available for enhancement
-    
     Returns: True if models are ready, False otherwise
     """
     models_dir = ensure_models_directory()
     
-    # Model URLs from instructions.txt
-    MODEL_URLS = {
-        "inswapper_128.onnx": "https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/inswapper_128.onnx",
-        "GFPGANv1.4.pth": "https://github.com/Userfrom1995/FaceSwapLive/releases/download/v1.0.0/GFPGANv1.4.pth"
-    }
+    # Model URLs from config
+    MODEL_URLS = config.models.MODEL_URLS
     
     # Check current model status
     has_face_swapper = (models_dir / "inswapper_128.onnx").exists()
@@ -105,7 +99,7 @@ def ensure_models_available() -> bool:
     
     log_with_timestamp("Checking model availability...")
     debug_log(f"Models directory: {models_dir}")
-    debug_log(f"Has inswapper_128.onnx: {has_face_swapper}")
+    debug_log(f"Has face swapper: {has_face_swapper}")
     debug_log(f"Has GFPGANv1.4.pth: {has_gfpgan}")
     
     # Scenario 1: User has face swapper model
@@ -135,9 +129,6 @@ def ensure_models_available() -> bool:
             return True
         else:
             log_with_timestamp("Failed to download required models")
-            log_with_timestamp("Please manually download models from:")
-            for name, url in MODEL_URLS.items():
-                log_with_timestamp(f"   {name}: {url}")
             return False
 
 def list_available_models():
@@ -148,34 +139,17 @@ def list_available_models():
     # Check for models
     face_swapper_file = models_dir / "inswapper_128.onnx"
     gfpgan_file = models_dir / "GFPGANv1.4.pth"
-    other_files = [f for f in models_dir.glob("*") if f.suffix in ['.onnx', '.pth'] and f.name not in ['inswapper_128.onnx', 'GFPGANv1.4.pth']]
     
-    if not face_swapper_file.exists() and not gfpgan_file.exists() and not other_files:
-        log_with_timestamp("   No models found")
-        log_with_timestamp("Download models from: https://github.com/Userfrom1995/FaceSwapLive/releases/tag/v1.0.0")
-        return
-    
-    # List face swapper model
     if face_swapper_file.exists():
         size_mb = face_swapper_file.stat().st_size / (1024 * 1024)
         log_with_timestamp(f"   Face Swapper: {face_swapper_file.name} ({size_mb:.1f} MB) - BEST QUALITY")
     
-    # List GFPGAN model
     if gfpgan_file.exists():
         size_mb = gfpgan_file.stat().st_size / (1024 * 1024)
         log_with_timestamp(f"   Enhancement: {gfpgan_file.name} ({size_mb:.1f} MB) - FACE ENHANCEMENT")
-    
-    # List other models
-    if other_files:
-        log_with_timestamp("   Other Models:")
-        for model_file in sorted(other_files):
-            size_mb = model_file.stat().st_size / (1024 * 1024)
-            log_with_timestamp(f"   {model_file.name} ({size_mb:.1f} MB)")
 
 def get_model_recommendations():
     """Provide model recommendations"""
     log_with_timestamp("Model Information:")
     log_with_timestamp("   inswapper_128.onnx - High quality face swapping model")
     log_with_timestamp("   GFPGANv1.4.pth - Face enhancement (optional but recommended)")
-    log_with_timestamp("")
-    log_with_timestamp("   Both models will be downloaded automatically if not present")

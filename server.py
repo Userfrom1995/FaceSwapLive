@@ -3,6 +3,10 @@ Face Swap Live - Server Implementation
 OPTIMIZED for maximum performance - minimal logging overhead
 """
 
+import gevent
+from gevent import monkey
+monkey.patch_all()
+
 from flask import Flask, render_template, request, Response, jsonify
 from flask_socketio import SocketIO, emit, disconnect
 import socket
@@ -186,7 +190,7 @@ class OptimizedFaceSwapServer:
             self.socketio = SocketIO(
                 self.app,
                 cors_allowed_origins="*",
-                async_mode='threading',
+                async_mode='gevent',
                 logger=False,
                 engineio_logger=False,
                 ping_timeout=30,

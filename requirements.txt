@@ -31,3 +31,4 @@ pyngrok
 # Uncomment for development
 flask-cors==6.0.0
 python-dotenv==1.2.2
+gevent==24.2.1
