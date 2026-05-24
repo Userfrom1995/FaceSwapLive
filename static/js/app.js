@@ -461,6 +461,14 @@ function toggleProcessing() {
     }
 }
 
+function toggleEnhancer() {
+    const isEnabled = document.getElementById('enhancerToggle').checked;
+    if (FaceSwapApp.socket && FaceSwapApp.state.connected) {
+        FaceSwapApp.socket.emit('toggle_enhancer', { enabled: isEnabled });
+        addLog(`✨ Face enhancement ${isEnabled ? 'enabled' : 'disabled'}`);
+    }
+}
+
 function clearLogs() {
     FaceSwapApp.elements.logs.innerHTML = '';
 }

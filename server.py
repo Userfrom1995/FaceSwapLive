@@ -178,6 +178,22 @@ class OptimizedFaceSwapServer:
             if request.sid == self.current_user:
                 self.pipeline.source_face = None
                 emit('status_update', {'message': 'Source cleared'})
+
+        @self.socketio.on('toggle_enhancer')
+        def handle_toggle_enhancer(data):
+            if request.sid == self.current_user:
+                enabled = data.get('enabled', False)
+                enhancer_loaded = self.pipeline.face_enhancer is not None
+                self.pipeline.use_enhancer = bool(enabled and enhancer_loaded)
+                if enabled and not enhancer_loaded:
+                    message = "Enhancer unavailable: GFPGAN is not loaded"
+                else:
+                    message = f"Enhancer {'enabled' if self.pipeline.use_enhancer else 'disabled'}"
+                emit('status_update', {
+                    'message': message,
+                    'enhancer_loaded': enhancer_loaded,
+                    'enhancer_enabled': self.pipeline.use_enhancer
+                })
     
     def start_server(self, host='0.0.0.0', port=None):
         """Start optimized server"""
@@ -224,8 +240,10 @@ class OptimizedFaceSwapServer:
             
         except KeyboardInterrupt:
             log_info("Server stopped by user")
+            return True
         except Exception as e:
             log_error(f"Server error: {e}")
+            return False
         finally:
             log_info("Cleanup complete")
 

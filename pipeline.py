@@ -12,6 +12,8 @@ import io
 from PIL import Image
 import time
 import os
+import importlib
+import sys
 from datetime import datetime
 from typing import Optional, Tuple, Union
 from config import config
@@ -25,13 +27,22 @@ def log_error(message):
     timestamp = datetime.now().strftime("%H:%M:%S")
     print(f"[{timestamp}] ERROR: {message}")
 
+def ensure_torchvision_compat():
+    """Expose the old TorchVision module name expected by BasicSR/GFPGAN."""
+    old_name = "torchvision.transforms.functional_tensor"
+    new_name = "torchvision.transforms._functional_tensor"
+    if old_name not in sys.modules:
+        sys.modules[old_name] = importlib.import_module(new_name)
+
 class FaceSwapPipeline:
     """Face swap pipeline with minimal logging overhead"""
     
     def __init__(self):
         self.face_app = None
         self.face_swapper = None
+        self.face_enhancer = None
         self.source_face = None
+        self.use_enhancer = False
         
         # Performance tracking
         self.frame_counter = 0
@@ -79,6 +90,17 @@ class FaceSwapPipeline:
                 try:
                     self.face_swapper = insightface.model_zoo.get_model(face_swapper_path, providers=providers)
                     
+                    # Try to load GFPGAN
+                    try:
+                        ensure_torchvision_compat()
+                        from gfpgan import GFPGANer
+                        gfpgan_path = os.path.join(config.models.MODELS_DIR, "GFPGANv1.4.pth")
+                        if os.path.exists(gfpgan_path):
+                            self.face_enhancer = GFPGANer(model_path=gfpgan_path, upscale=1, arch='clean', channel_multiplier=2, device=torch.device('cuda' if use_gpu else 'cpu'))
+                            log_info("Face enhancer (GFPGAN) loaded")
+                    except Exception as e:
+                        log_info(f"GFPGAN could not be loaded (optional): {e}")
+
                     # Model warmup
                     dummy_img = np.random.randint(0, 255, (320, 320, 3), dtype=np.uint8)
                     self.face_app.get(dummy_img)
@@ -151,6 +173,15 @@ class FaceSwapPipeline:
             if target_face is not None:
                 # Face swap using standard InsightFace API
                 swapped_frame = self.face_swapper.get(frame, target_face, self.source_face, paste_back=True)
+                
+                # Optional face enhancement
+                if self.use_enhancer and self.face_enhancer:
+                    try:
+                        _, _, swapped_frame = self.face_enhancer.enhance(swapped_frame, has_aligned=False, only_center_face=False, paste_back=True, weight=1.0)
+                    except Exception as e:
+                        if self.error_counter % 50 == 0:
+                            log_error(f"Enhancement error: {e}")
+
                 self.swap_counter += 1
                 
                 # Convert and encode directly with OpenCV to JPEG
@@ -187,7 +218,9 @@ class FaceSwapPipeline:
             'avg_processing_time': round(avg_time, 2),
             'processing_time': round(self.processing_times[-1], 2) if self.processing_times else 0,
             'source_face_loaded': self.source_face is not None,
-            'models_loaded': self.face_swapper is not None
+            'models_loaded': self.face_swapper is not None,
+            'enhancer_loaded': self.face_enhancer is not None,
+            'enhancer_enabled': self.use_enhancer
         }
     
     def reset_stats(self):
